@@ -8,26 +8,100 @@
 import Foundation
 import SwiftUI
 
-protocol NewsItemViewModel: Identifiable, Equatable {
-    var id: String { get }
-    var author: String { get } 
-    var sourceName: String { get }
-    var title: String { get }
-    var newsDescription: String { get }
-    var url: String { get }
-    var urlToImage: String { get }
-    var publishedAt: String { get }
-     
-    var isAlreadyRead: Bool { get set }
+struct NewsItemViewModel: Identifiable, Equatable {
+    var id: String
+    var author: String
+    var sourceName: String
+    var title: String
+    var newsDescription: String
+    var url: String
+    var urlToImage: String
+    var publishedAt: String // Formatted for presenting
+    var isAlreadyRead: Bool
 }
 
-class NewsListStore<Item>: ObservableObject where Item: NewsItemViewModel {
-    @Published var newsItems: [Item] = [] {
+extension NewsItemViewModel {
+    
+    init(newsItem: NewsItem) {
+        id = newsItem.id
+        sourceName = newsItem.source.name
+        author = newsItem.author
+        title = newsItem.title
+        newsDescription = newsItem.newsDescription
+        url = newsItem.url
+        urlToImage = newsItem.urlToImage
+        publishedAt = NewsItem.dateFormatter.string(from: newsItem.publishedAt)
+        isAlreadyRead = newsItem.isAlreadyRead
+    }
+}
+
+enum NewsItemsListError: Swift.Error {
+    case any(Error)
+}
+
+struct NewsListViewModel {
+    
+    var items: [NewsItemViewModel] {
         didSet {
             isInitialLoad = oldValue.count == 0
         }
     }
-    @Published var error: Error? = nil
+    var error: NewsItemsListError? = nil
     
     private(set) var isInitialLoad = true
+}
+
+protocol NewsListPresenterInput: AnyObject {
+    func getDestinationView(for item: NewsItemViewModel) -> AnyView
+    func selectPresentSettings()
+}
+
+protocol NewListPresenterOutput: AnyObject {
+    func add(items: [NewsItemViewModel])
+    func handle(error: NewsItemsListError)
+}
+
+class NewsListStore: ObservableObject {
+    
+    enum Action {
+        case expandItem(id: String)
+        case selectSettings
+    }
+    
+    @Published private(set) var viewModel = NewsListViewModel(items: [])
+    @Published private(set) var expandedCells = Set<String>()
+    
+    @Published var isSettingsViewVisible = false
+    
+    private var presenter: NewsListPresenterInput
+    
+    init(presenter: NewsListPresenterInput) {
+        self.presenter = presenter
+    }
+    
+    func destinationView(for item: NewsItemViewModel) -> AnyView {
+        presenter.getDestinationView(for: item)
+    }
+    
+    func dispatch(action: Action) {
+        switch action {
+        case .expandItem(let id):
+            expandedCells.insert(id)
+            
+        case .selectSettings:
+            isSettingsViewVisible = true
+            presenter.selectPresentSettings()
+        }
+    }
+}
+
+extension NewsListStore: NewListPresenterOutput {
+    
+    func add(items: [NewsItemViewModel]) {
+        viewModel.items = items
+    }
+    
+    func handle(error: NewsItemsListError) {
+        viewModel.error = error
+    }
 }

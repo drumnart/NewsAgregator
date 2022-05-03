@@ -10,7 +10,7 @@ import SwiftUI
 
 class NewsListRouter: NewsListRouterProtocol {
     
-    func presentDetailsScreen(item: NewsItem, onAppear: (() -> Void)?) -> AnyView {
+    func presentDetailsScreen(item: NewsItemViewModel, onAppear: (() -> Void)?) -> AnyView {
         return AnyView(NewsDetailsView(item: item, onAppear: onAppear))
     }
 }

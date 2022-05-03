@@ -9,11 +9,11 @@ import SwiftUI
 
 struct NewsDetailsView: View {
     
-    @State var item: NewsItem
+    @State var item: NewsItemViewModel
     
     private var onAppearClossure: (() -> Void)?
     
-    init(item: NewsItem, onAppear: (() -> Void)? = nil) {
+    init(item: NewsItemViewModel, onAppear: (() -> Void)? = nil) {
         self.item = item
         self.onAppearClossure = onAppear
     }
@@ -30,7 +30,8 @@ struct NewsDetailsView: View {
 
 struct NewsDetailsView_Previews: PreviewProvider {
     static var previews: some View {
-        let newsItem = RealmNewsItem(article: Samples.sampleAPIItem5)
-        NewsDetailsView(item: NewsItem(realmNewsItem: newsItem))
+        let realmNewsItem = RealmNewsItem(article: Samples.sampleAPIItem5)
+        let newsItem = NewsItem(realmNewsItem: realmNewsItem)
+        NewsDetailsView(item: NewsItemViewModel(newsItem: newsItem))
     }
 }

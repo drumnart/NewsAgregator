@@ -21,12 +21,10 @@ enum Change {
 
 protocol NewsDBProtocol {
     
-    func updateRelevantFieldsFrom(item: NewsItem)
+    func setIsAlreadyRead(for id: String, value: Bool) throws
     
-    func create(using items: [NewsAPI.Article])
-    func update(using items: [NewsAPI.Article])
+    func fetchNews() -> AnyPublisher<[NewsItem], Error>
     
-    func fetch() -> AnyPublisher<[RealmNewsItem], Error>
     func observeNewsItemsChanges(_ closure: @escaping (Change) -> Void)
     
     func getMostRecentPublishDate() -> Date?

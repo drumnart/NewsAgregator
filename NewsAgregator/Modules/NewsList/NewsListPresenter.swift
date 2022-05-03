@@ -9,60 +9,60 @@ import Foundation
 import Combine
 import SwiftUI
 
-protocol NewsItemModel: Identifiable, Equatable {
-    var id: String { get }
-    var sourceName: String { get }
-    var author: String { get }
-    var title: String { get }
-    var newsDescription: String { get }
-    var url: String { get }
-    var urlToImage: String { get }
-    var publishedAt: Date { get }
-    var isAlreadyRead: Bool { get set }
+protocol NewsListInteractorInput {
+    
+    func markAsReadNewsItem(id: String)
 }
 
-protocol NewsListInteractorProtocol {
+protocol NewsListInteractorOutput: AnyObject {
     
-    associatedtype T: NewsItemModel
-    
-    var newsItemsPublisher: Published<[T]>.Publisher { get }
-    var errorPublisher: Published<Error?>.Publisher { get }
-    
-    func markAsReadNewsItem(item: NewsItem)
+    func present(items: [NewsItem])
+    func present(error: Error)
 }
 
-protocol NewsListRouterProtocol {
-    func presentDetailsScreen(item: NewsItem, onAppear: (() -> Void)?) -> AnyView
+protocol NewsListRouterProtocol: AnyObject {
+    func presentDetailsScreen(item: NewsItemViewModel, onAppear: (() -> Void)?) -> AnyView
 }
 
-final class NewsListPresenter<T>: NewsListPresenterProtocol where T: NewsListInteractorProtocol {
+final class NewsListPresenter {
     
-    private var interactor: T
+    private var interactor: NewsListInteractorInput
     private var router: NewsListRouterProtocol
     
-    private(set) var store = NewsListStore<NewsItem>()
+    private weak var output: NewListPresenterOutput?
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(store: NewsListStore<NewsItem>, interactor: T, router: NewsListRouterProtocol) {
-        self.store = store
+    init(interactor: NewsListInteractorInput, router: NewsListRouterProtocol) {
         self.interactor = interactor
         self.router = router
-        
-        interactor.newsItemsPublisher
-            .sink { [weak self] items in
-                self?.store.newsItems = items.map { NewsItem(realmNewsItem: $0) }
-            }
-            .store(in: &cancellables)
     }
-     
-    func getDstinationView(for item: NewsItem) -> AnyView {
+    
+    func setup(output: NewListPresenterOutput?) {
+        self.output = output
+    }
+}
+
+extension NewsListPresenter: NewsListPresenterInput {
+    
+    func getDestinationView(for item: NewsItemViewModel) -> AnyView {
         return router.presentDetailsScreen(item: item, onAppear: { [weak self] in
-            self?.interactor.markAsReadNewsItem(item: item)
+            self?.interactor.markAsReadNewsItem(id: item.id)
         })
     }
     
-    func presentSettings() {
+    func selectPresentSettings() {
         
+    }
+}
+
+extension NewsListPresenter: NewsListInteractorOutput {
+    
+    func present(items: [NewsItem]) {
+        output?.add(items: items.map { NewsItemViewModel(newsItem: $0) })
+    }
+    
+    func present(error: Error) {
+        output?.handle(error: .any(error))
     }
 }

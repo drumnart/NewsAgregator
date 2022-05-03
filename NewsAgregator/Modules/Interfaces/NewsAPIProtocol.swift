@@ -10,5 +10,12 @@ import Combine
 
 protocol NewsAPIProtocol {
     
-    func fetchArticles(from endpoint: NewsAPI.Endpoint) -> AnyPublisher<[NewsAPI.Article], NewsAPI.APIError>
+    func fetchNews(from sources: [String]) -> AnyPublisher<[NewsAPI.Article], NewsAPI.APIError>
+}
+
+extension NewsAPI: NewsAPIProtocol {
+    
+    func fetchNews(from sources: [String]) -> AnyPublisher<[NewsAPI.Article], NewsAPI.APIError> {
+        fetchArticles(from: NewsAPI.Endpoint.newsFromSources(sources))
+    }
 }

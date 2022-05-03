@@ -10,11 +10,15 @@ import SwiftUI
 
 class NewsListModuleBuilder {
     
-    static func build() -> NewsListView<NewsItem, NewsListPresenter<NewsListInteractor>>  {
-        let interactor = NewsListInteractor(service: NewsAPI.shared, database: Realm_NewsDB.shared)
+    static func build() -> NewsListView {
+        let database = Realm_NewsDB.shared
+        let serviceWorker = APIServiceWorker(apiService: NewsAPI.shared, delegate: database)
+        let interactor = NewsListInteractor(apiServiceWorker: serviceWorker, databaseService: database)
         let router = NewsListRouter()
-        let store = NewsListStore<NewsItem>()
-        let presenter = NewsListPresenter(store: store, interactor: interactor, router: router)
-        return NewsListView(presenter: presenter)
+        let presenter = NewsListPresenter(interactor: interactor, router: router)
+        let store = NewsListStore(presenter: presenter)
+        presenter.setup(output: store)
+        interactor.setup(output: presenter)
+        return NewsListView(store: store)
     }
 }

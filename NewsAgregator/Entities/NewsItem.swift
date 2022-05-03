@@ -7,32 +7,39 @@
 
 import Foundation
 
-struct NewsItem: NewsItemViewModel {
+struct NewsItem: Identifiable {
+    
+    struct Source: Identifiable {
+        let id: String
+        let name: String
+    }
+    
     let id: String
-    let sourceName: String
+    let source: Source
     let author: String
     let title: String
     let newsDescription: String // renamed to newsDescription bacause of conflict with standart Description
     let url: String
     let urlToImage: String
-    let publishedAt: String // Formatted for presenting
+    let publishedAt: Date
     
     var isAlreadyRead: Bool
+}
+
+extension NewsItem {
     
-    init<T: NewsItemModel>(realmNewsItem: T) {
+    init(realmNewsItem: RealmNewsItem) {
         id = realmNewsItem.id
-        sourceName = realmNewsItem.sourceName
+        source = NewsItem.Source(id: realmNewsItem.source?.id ?? "",
+                                 name: realmNewsItem.source?.name ?? "")
         author = realmNewsItem.author
         title = realmNewsItem.title
         newsDescription = realmNewsItem.newsDescription
         url = realmNewsItem.url
         urlToImage = realmNewsItem.urlToImage
-        publishedAt = NewsItem.dateFormatter.string(from: realmNewsItem.publishedAt)
+        publishedAt = realmNewsItem.publishedAt
         isAlreadyRead = realmNewsItem.isAlreadyRead
     }
-}
-
-extension NewsItem {
     
     static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()

@@ -7,33 +7,18 @@
 
 import SwiftUI
 
-protocol NewsListPresenterProtocol {
-
-    associatedtype Item: NewsItemViewModel
-    var store: NewsListStore<Item> { get }
+struct NewsListView: View {
     
-    func getDstinationView(for item: Item) -> AnyView
-    func presentSettings()
-}
-
-struct NewsListView<Item, T>: View where T: NewsListPresenterProtocol, T.Item == Item {
+    @ObservedObject private var store: NewsListStore
     
-    private var presenter: T
-    
-    @ObservedObject private var store: NewsListStore<Item>
-    
-    @State private var expandedCells = Set<String>()
-    @State private var showSettings = false
-    
-    init(presenter: T) {
-        self.presenter = presenter
-        self.store = presenter.store
+    init(store: NewsListStore) {
+        self.store = store
         prepare()
     }
     
     var body: some View {
         List {
-            ForEach(store.newsItems) { item in
+            ForEach(store.viewModel.items) { item in
                 // TODO: Create separate view for list item
                 let vs = VStack {
                     Spacer()
@@ -75,7 +60,7 @@ struct NewsListView<Item, T>: View where T: NewsListPresenterProtocol, T.Item ==
                         imageLoader: ImageLoader(url: URL(string: item.urlToImage))
                     ).animation(nil)
                         
-                    if expandedCells.contains(item.id) {
+                    if store.expandedCells.contains(item.id) {
                         Text("\(item.newsDescription)")
                             .lineLimit(10)
                             .padding(.horizontal, 8)
@@ -85,7 +70,7 @@ struct NewsListView<Item, T>: View where T: NewsListPresenterProtocol, T.Item ==
                         Spacer(minLength: 0)
                         Button {
                             withAnimation {
-                                expandItem(id: item.id)
+                                store.dispatch(action: .expandItem(id: item.id))
                             }
                         } label: {
                             Image(systemName: "chevron.down")
@@ -101,7 +86,8 @@ struct NewsListView<Item, T>: View where T: NewsListPresenterProtocol, T.Item ==
                 .background(
                     // Place NavigationLink in the background modifier as a workaround
                     // to hide unnecessary visual elements such as ">", etc.
-                    NavigationLink("", destination: presenter.getDstinationView(for: item)).opacity(0)
+                    NavigationLink("", destination: store.destinationView(for: item))
+                        .opacity(0)
                 )
                 
                 if #available(iOS 15, *) {
@@ -114,9 +100,9 @@ struct NewsListView<Item, T>: View where T: NewsListPresenterProtocol, T.Item ==
             .background(Color.white)
             .listRowBackground(Color(.systemGroupedBackground))
         }
-        .animation(presenter.store.isInitialLoad ? nil : .default,
-                   value: presenter.store.newsItems)
-        .sheet(isPresented: $showSettings, onDismiss: nil) {
+        .animation(store.viewModel.isInitialLoad ? nil : .default,
+                   value: store.viewModel.items)
+        .sheet(isPresented: $store.isSettingsViewVisible, onDismiss: nil) {
             
         }
         .navigationBarTitle("News", displayMode: .inline)
@@ -125,12 +111,8 @@ struct NewsListView<Item, T>: View where T: NewsListPresenterProtocol, T.Item ==
         })
     }
     
-    private func expandItem(id: String) {
-        expandedCells.insert(id)
-    }
-    
     func openSettings() {
-         showSettings = true
+        store.dispatch(action: .selectSettings)
     }
     
     private func prepare() {
@@ -147,11 +129,23 @@ struct NewsListView<Item, T>: View where T: NewsListPresenterProtocol, T.Item ==
 struct NewsListView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let interactor = NewsListInteractor(service: NewsAPI.shared, database: Realm_NewsDB.shared)
+        let database = Realm_NewsDB.shared
+        let serviceWorker = APIServiceWorker(apiService: NewsAPI.shared, delegate: database)
+        let interactor = NewsListInteractor(apiServiceWorker: serviceWorker, databaseService: database)
         let router = NewsListRouter()
-        let presenter = NewsListPresenter_Previews(interactor: interactor, router: router)
-        NavigationView {
-            NewsListView(presenter: presenter)
+        let presenter = NewsListPresenter(interactor: interactor, router: router)
+        let store = NewsListStore(presenter: presenter)
+        presenter.setup(output: store)
+        interactor.setup(output: presenter)
+        
+        let dbItem = RealmNewsItem(article: Samples.sampleAPIItem5)
+        let item = NewsItem(realmNewsItem: dbItem)
+        let itemViewModel = NewsItemViewModel(newsItem: item)
+        
+        store.add(items: [itemViewModel])
+        
+        return NavigationView {
+            NewsListView(store: store)
         }
     }
 }

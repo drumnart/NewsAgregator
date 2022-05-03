@@ -34,9 +34,5 @@ extension NewsAPI {
         let urlToImage: String?
         let publishedAt: Date?
         let content: String?
-        
-//        enum CodingKeys: CodingKey {
-//            case source, author, title, description, url, urlToImage, publishedAt, content
-//        }
     }
 }

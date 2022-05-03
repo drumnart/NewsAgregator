@@ -28,7 +28,7 @@ final class NewsAPI {
     private var cancellable = Set<AnyCancellable>()
 }
 
-extension NewsAPI: NewsAPIProtocol {
+extension NewsAPI { 
     
     // Fetch Articles from a given endpoint
     func fetchArticles(from endpoint: Endpoint) -> AnyPublisher<[Article], APIError> {
