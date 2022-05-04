@@ -53,7 +53,9 @@ struct NewsListViewModel {
 
 protocol NewsListPresenterInput: AnyObject {
     func getDestinationView(for item: NewsItemViewModel) -> AnyView
+    func getSettingsView() -> AnyView
     func selectPresentSettings()
+    func applyFilters()
 }
 
 protocol NewListPresenterOutput: AnyObject {
@@ -66,6 +68,7 @@ class NewsListStore: ObservableObject {
     enum Action {
         case expandItem(id: String)
         case selectSettings
+        case dismissSettings
     }
     
     @Published private(set) var viewModel = NewsListViewModel(items: [])
@@ -83,6 +86,10 @@ class NewsListStore: ObservableObject {
         presenter.getDestinationView(for: item)
     }
     
+    func settingsView() -> AnyView {
+        presenter.getSettingsView()
+    }
+    
     func dispatch(action: Action) {
         switch action {
         case .expandItem(let id):
@@ -91,6 +98,9 @@ class NewsListStore: ObservableObject {
         case .selectSettings:
             isSettingsViewVisible = true
             presenter.selectPresentSettings()
+            
+        case .dismissSettings:
+            presenter.applyFilters()
         }
     }
 }

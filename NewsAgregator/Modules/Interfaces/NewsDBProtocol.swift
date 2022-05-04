@@ -21,6 +21,8 @@ enum Change {
 
 protocol NewsDBProtocol {
     
+    // News:
+    
     func setIsAlreadyRead(for id: String, value: Bool) throws
     
     func fetchNews() -> AnyPublisher<[NewsItem], Error>

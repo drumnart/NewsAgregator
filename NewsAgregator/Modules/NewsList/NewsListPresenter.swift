@@ -12,6 +12,8 @@ import SwiftUI
 protocol NewsListInteractorInput {
     
     func markAsReadNewsItem(id: String)
+    func getSettings() -> Settings
+    func applyFilters()
 }
 
 protocol NewsListInteractorOutput: AnyObject {
@@ -22,18 +24,21 @@ protocol NewsListInteractorOutput: AnyObject {
 
 protocol NewsListRouterProtocol: AnyObject {
     func presentDetailsScreen(item: NewsItemViewModel, onAppear: (() -> Void)?) -> AnyView
+    func presentSettings(viewModel: SettingsViewModel, interactor: SettingsInteractorInput) -> AnyView
 }
 
 final class NewsListPresenter {
     
-    private var interactor: NewsListInteractorInput
+    typealias InteractorInput = NewsListInteractorInput & SettingsInteractorInput
+    
+    private var interactor: InteractorInput
     private var router: NewsListRouterProtocol
     
     private weak var output: NewListPresenterOutput?
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(interactor: NewsListInteractorInput, router: NewsListRouterProtocol) {
+    init(interactor: InteractorInput, router: NewsListRouterProtocol) {
         self.interactor = interactor
         self.router = router
     }
@@ -51,8 +56,20 @@ extension NewsListPresenter: NewsListPresenterInput {
         })
     }
     
+    func getSettingsView() -> AnyView {
+        let settings = interactor.getSettings()
+        let viewModel = SettingsViewModel(
+            timeFrequencies: settings.timeFrequencies.map { Int($0) / 60 },
+            selectedIndex: settings.selectedFrequencyIndex
+        )
+        return router.presentSettings(viewModel: viewModel, interactor: interactor)
+    }
+    
     func selectPresentSettings() {
-        
+    }
+    
+    func applyFilters() {
+        interactor.applyFilters()
     }
 }
 

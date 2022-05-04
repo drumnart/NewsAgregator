@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 protocol APIServiceWorkerProtocol {
-    func fetchNews(from sources: [String], completion: ((Result<Void, Error>) -> Void)?)
+    func fetchNews(from sources: [String], language: Language, completion: ((Result<Void, Error>) -> Void)?)
 }
 
 protocol APIServiceDelegate: AnyObject {
@@ -29,9 +29,9 @@ class APIServiceWorker: APIServiceWorkerProtocol {
     
     // Fetches news from API and saves to database.
     // Callback returns failure with error in case of failed request, othervise success
-    func fetchNews(from sources: [String], completion: ((Result<Void, Error>) -> Void)?) {
+    func fetchNews(from sources: [String], language: Language, completion: ((Result<Void, Error>) -> Void)?) {
         let outerCompletion = completion
-        apiService.fetchNews(from: sources)
+        apiService.fetchNews(from: sources, language: language)
             .sink(
                 receiveCompletion:  { (completion) in
                     switch completion {

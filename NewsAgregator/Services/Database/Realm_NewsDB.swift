@@ -57,6 +57,7 @@ final class Realm_NewsDB {
     }
 }
 
+// MARK: - News
 extension Realm_NewsDB: NewsDBProtocol {
     
     func observeNewsItemsChanges(_ closure: @escaping (Change) -> Void) {
@@ -106,7 +107,7 @@ extension Realm_NewsDB: NewsDBProtocol {
     }
     
     func setIsAlreadyRead(for id: String, value: Bool) throws {
-        try realm.write {
+        try write { realm in
             if let realmItem = realm.objects(RealmNewsItem.self).where ({
                 $0.id == id
             }).first {

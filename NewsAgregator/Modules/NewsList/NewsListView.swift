@@ -19,7 +19,9 @@ struct NewsListView: View {
     var body: some View {
         List {
             ForEach(store.viewModel.items) { item in
-                // TODO: Create separate view for list item
+                
+                // TODO: Create separate view for list item and different states handling
+                
                 let vs = VStack {
                     Spacer()
                     Text("\(item.title)")
@@ -102,8 +104,10 @@ struct NewsListView: View {
         }
         .animation(store.viewModel.isInitialLoad ? nil : .default,
                    value: store.viewModel.items)
-        .sheet(isPresented: $store.isSettingsViewVisible, onDismiss: nil) {
-            
+        .sheet(isPresented: $store.isSettingsViewVisible, onDismiss: {
+            store.dispatch(action: .dismissSettings)
+        }) {
+            store.settingsView()
         }
         .navigationBarTitle("News", displayMode: .inline)
         .navigationBarItems(trailing: Button(action: openSettings) {

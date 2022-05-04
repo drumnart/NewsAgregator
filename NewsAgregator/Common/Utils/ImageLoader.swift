@@ -58,10 +58,10 @@ final class ImageLoader: ObservableObject {
                             }
                         },
                         receiveValue: {
-                            promise(.success($0))
                             if let image = $0 {
                                 self.cache.setImage(image, for: url.absoluteString)
                             }
+                            promise(.success($0))
                         }
                     )
                     .store(in: &self.cancellable)

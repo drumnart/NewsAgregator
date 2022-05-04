@@ -10,10 +10,15 @@ import CryptoKit
 
 extension NewsAPI {
     
-    struct Response: Codable {
+    struct ArticlesResponse: Codable {
         let status: String?
         let totalResults: Int?
         let articles: [Article]
+    }
+    
+    struct SourcesResponse: Codable {
+        let status: String?
+        let sources: [Source]
     }
     
     struct Source: Codable, Identifiable {
